@@ -8,10 +8,18 @@ Run: python backend/server.py
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 from bson import ObjectId
 from bson.errors import InvalidId
 from datetime import datetime, timedelta
 import os
+
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # python-dotenv not installed, use system environment variables
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend
@@ -20,15 +28,31 @@ CORS(app)  # Enable CORS for frontend
 MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017")
 DATABASE_NAME = "platepulse"
 
-# Initialize MongoDB client
-client = MongoClient(MONGO_URI)
-db = client[DATABASE_NAME]
+# Initialize MongoDB client with robust connection options for Atlas
+try:
+    client = MongoClient(
+        MONGO_URI,
+        serverSelectionTimeoutMS=5000,  # 5 second timeout for server selection
+        connectTimeoutMS=10000,  # 10 second connection timeout
+        socketTimeoutMS=None,  # No socket timeout
+        maxPoolSize=50,  # Connection pool size
+        retryWrites=True,  # Enable retry writes
+        w='majority'  # Write concern for durability
+    )
+    # Test the connection
+    client.admin.command('ping')
+    print("✅ Successfully connected to MongoDB!")
+except (ConnectionFailure, ServerSelectionTimeoutError) as e:
+    print(f"❌ Failed to connect to MongoDB: {e}")
+    client = None
+
+db = client[DATABASE_NAME] if client is not None else None
 
 # Collections
-users_collection = db["users"]
-meals_collection = db["meals"]
-summaries_collection = db["daily_summaries"]
-food_db_collection = db["food_database"]
+users_collection = db["users"] if db is not None else None
+meals_collection = db["meals"] if db is not None else None
+summaries_collection = db["daily_summaries"] if db is not None else None
+food_db_collection = db["food_database"] if db is not None else None
 
 
 def serialize_doc(doc):
@@ -167,7 +191,7 @@ def log_meal():
         
         # Update daily summary
         update_daily_summary(obj_id, meal["date"])
-        print("Meal logged successfully:", meal)
+        # print("Meal logged successfully:", meal)
         return jsonify({
             "success": True,
             "meal": serialize_doc(meal)

@@ -8,7 +8,7 @@ Usage:
 Requirements:
     - MongoDB running locally (default: mongodb://localhost:27017)
     - Or set MONGO_URI environment variable for remote MongoDB
-
+    
 Install dependencies:
     pip install -r backend/requirements.txt
 """
@@ -17,6 +17,13 @@ from pymongo import MongoClient
 from datetime import datetime, timedelta
 import os
 import sys
+
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # python-dotenv not installed, use system environment variables
 
 # MongoDB Configuration
 MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017")
