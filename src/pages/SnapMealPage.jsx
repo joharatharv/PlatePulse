@@ -47,7 +47,8 @@ const SnapMealPage = () => {
       name: analysisResult.name,
       calories: analysisResult.totalCalories,
       image: imagePreview,
-      nutrition: analysisResult.nutrition
+      nutrition: analysisResult.nutrition,
+      items: analysisResult.items
     };
 
     addMeal(meal);

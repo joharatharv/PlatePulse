@@ -1,0 +1,12 @@
+# PlatePulse Backend Dependencies
+# Install with: pip install -r requirements.txt
+
+# MongoDB driver
+pymongo>=4.6.0
+
+# Flask web framework
+Flask>=3.0.0
+flask-cors>=4.0.0
+
+# Environment variables (optional)
+python-dotenv>=1.0.0
