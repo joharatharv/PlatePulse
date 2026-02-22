@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Upload, Check, X, Loader } from 'lucide-react';
+import { Camera, Upload, Check, X } from 'lucide-react';
 import { useMeals } from '../context/MealContext';
 import { getRandomMealAnalysis, simulateApiCall } from '../api/dummyData';
 
@@ -10,9 +10,69 @@ const SnapMealPage = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [mealType, setMealType] = useState('Lunch');
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
   const fileInputRef = useRef(null);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const streamRef = useRef(null);
   const { addMeal } = useMeals();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+    };
+  }, []);
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    setIsCameraOpen(false);
+  };
+
+  const handleOpenCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false
+      });
+
+      streamRef.current = stream;
+      setIsCameraOpen(true);
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+    } catch (error) {
+      console.error('Unable to open camera:', error);
+    }
+  };
+
+  const handleCapturePhoto = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+
+    if (!video || !canvas) return;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const context = canvas.getContext('2d');
+    if (!context) return;
+
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const capturedImage = canvas.toDataURL('image/jpeg', 0.9);
+    setImage(null);
+    setImagePreview(capturedImage);
+    setAnalysisResult(null);
+    stopCamera();
+  };
 
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
@@ -56,6 +116,7 @@ const SnapMealPage = () => {
   };
 
   const handleReset = () => {
+    stopCamera();
     setImage(null);
     setImagePreview(null);
     setAnalysisResult(null);
@@ -65,21 +126,51 @@ const SnapMealPage = () => {
     <div className="page">
       {/* Image Upload Area */}
       {!imagePreview ? (
-        <div 
-          className="upload-area" 
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <Camera size={48} />
-          <p>Tap to take a photo or upload an image</p>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={handleImageSelect}
-            className="hidden"
-          />
-        </div>
+        <>
+          {isCameraOpen ? (
+            <div className="card">
+              <video ref={videoRef} className="camera-preview" playsInline muted autoPlay />
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button className="btn btn-secondary" onClick={stopCamera} style={{ flex: 1 }}>
+                  <X size={20} />
+                  Cancel
+                </button>
+                <button className="btn btn-primary" onClick={handleCapturePhoto} style={{ flex: 2 }}>
+                  <Camera size={20} />
+                  Take Photo
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="upload-area">
+              <Camera size={48} />
+              <p>Take a meal photo directly or upload from gallery</p>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                <button className="btn btn-primary" onClick={handleOpenCamera} style={{ flex: 2 }}>
+                  <Camera size={20} />
+                  Open Camera
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{ flex: 1 }}
+                >
+                  <Upload size={20} />
+                  Upload
+                </button>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleImageSelect}
+                className="hidden"
+              />
+            </div>
+          )}
+          <canvas ref={canvasRef} className="hidden" />
+        </>
       ) : (
         <div className="card">
           <img src={imagePreview} alt="Meal" className="image-preview" />

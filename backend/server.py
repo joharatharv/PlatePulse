@@ -484,7 +484,7 @@ if __name__ == "__main__":
     print("=" * 40)
     print(f"MongoDB URI: {MONGO_URI}")
     print(f"Database: {DATABASE_NAME}")
-    print("\nStarting server on http://localhost:5000")
+    print("\nStarting server on http://localhost:5001")
     print("API Documentation:")
     print("  GET  /api/health     - Health check")
     print("  GET  /api/users/demo - Get demo user")
@@ -495,4 +495,4 @@ if __name__ == "__main__":
     print("  GET  /api/foods      - Search food database")
     print("=" * 40 + "\n")
     
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5001, debug=True)

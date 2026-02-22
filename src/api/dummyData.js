@@ -190,7 +190,7 @@ export const weeklyData = [
 ];
 
 // API Base URL - change this to your backend URL
-export const API_BASE_URL = 'http://localhost:5000/api';
+export const API_BASE_URL = 'http://localhost:5001/api';
 
 // Simulate API delay (for local testing without backend)
 export const simulateApiCall = (data, delay = 1500) => {

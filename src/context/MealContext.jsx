@@ -26,7 +26,7 @@ export const MealProvider = ({ children }) => {
         setIsLoading(true);
         
         // Get demo user first
-        const userResponse = await fetch('http://localhost:5000/api/users/demo');
+        const userResponse = await fetch('http://localhost:5001/api/users/demo');
         let currentUserId = null;
         
         if (userResponse.ok) {
