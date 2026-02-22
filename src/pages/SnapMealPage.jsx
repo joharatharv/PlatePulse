@@ -18,6 +18,12 @@ const SnapMealPage = () => {
   const { addMeal } = useMeals();
   const navigate = useNavigate();
 
+  const formatNumber = (value) => {
+    const numericValue = Number(value);
+    if (Number.isNaN(numericValue)) return value;
+    return Number.isInteger(numericValue) ? numericValue : numericValue.toFixed(1);
+  };
+
   useEffect(() => {
     return () => {
       if (streamRef.current) {
@@ -26,6 +32,21 @@ const SnapMealPage = () => {
       }
     };
   }, []);
+
+  useEffect(() => {
+    const attachStreamToVideo = async () => {
+      if (!isCameraOpen || !videoRef.current || !streamRef.current) return;
+
+      try {
+        videoRef.current.srcObject = streamRef.current;
+        await videoRef.current.play();
+      } catch (error) {
+        console.error('Unable to start camera preview:', error);
+      }
+    };
+
+    attachStreamToVideo();
+  }, [isCameraOpen]);
 
   const stopCamera = () => {
     if (streamRef.current) {
@@ -36,19 +57,32 @@ const SnapMealPage = () => {
   };
 
   const handleOpenCamera = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      console.error('Camera API is not supported in this browser.');
+      return;
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' } },
-        audio: false
-      });
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } },
+          audio: false
+        });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false
+        });
+      }
 
       streamRef.current = stream;
       setIsCameraOpen(true);
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
     } catch (error) {
       console.error('Unable to open camera:', error);
     }
@@ -217,15 +251,15 @@ const SnapMealPage = () => {
                 <div className="nutrition-label">Calories</div>
               </div>
               <div className="nutrition-item">
-                <div className="nutrition-value">{analysisResult.nutrition.protein}g</div>
+                <div className="nutrition-value">{formatNumber(analysisResult.nutrition.protein)}g</div>
                 <div className="nutrition-label">Protein</div>
               </div>
               <div className="nutrition-item">
-                <div className="nutrition-value">{analysisResult.nutrition.carbs}g</div>
+                <div className="nutrition-value">{formatNumber(analysisResult.nutrition.carbs)}g</div>
                 <div className="nutrition-label">Carbs</div>
               </div>
               <div className="nutrition-item">
-                <div className="nutrition-value">{analysisResult.nutrition.fat}g</div>
+                <div className="nutrition-value">{formatNumber(analysisResult.nutrition.fat)}g</div>
                 <div className="nutrition-label">Fat</div>
               </div>
             </div>
@@ -234,8 +268,13 @@ const SnapMealPage = () => {
               <h4 style={{ marginBottom: '8px' }}>Detected Items</h4>
               {analysisResult.items.map((item, index) => (
                 <div key={index} className="food-item">
-                  <span>{item.name} ({item.portion})</span>
-                  <span>{item.calories} kcal</span>
+                  <div>
+                    <div style={{ fontWeight: 600 }}>{item.name}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                      {formatNumber(item.grams)}g • P {formatNumber(item.nutrition.protein)}g • C {formatNumber(item.nutrition.carbs)}g • F {formatNumber(item.nutrition.fat)}g
+                    </div>
+                  </div>
+                  <span>{formatNumber(item.calories)} kcal</span>
                 </div>
               ))}
             </div>

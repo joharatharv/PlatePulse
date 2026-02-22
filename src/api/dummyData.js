@@ -1,120 +1,165 @@
 // Dummy API stub data for PlatePulse - Indian Meals
 
+const roundToOneDecimal = (value) => Math.round((value + Number.EPSILON) * 10) / 10;
+
+const buildAnalysis = (id, name, confidence, items) => {
+  const totalCalories = roundToOneDecimal(items.reduce((sum, item) => sum + item.calories, 0));
+  const totalProtein = roundToOneDecimal(items.reduce((sum, item) => sum + item.nutrition.protein, 0));
+  const totalCarbs = roundToOneDecimal(items.reduce((sum, item) => sum + item.nutrition.carbs, 0));
+  const totalFat = roundToOneDecimal(items.reduce((sum, item) => sum + item.nutrition.fat, 0));
+  const totalFiber = roundToOneDecimal(items.reduce((sum, item) => sum + (item.nutrition.fiber || 0), 0));
+  const totalSugar = roundToOneDecimal(items.reduce((sum, item) => sum + (item.nutrition.sugar || 0), 0));
+
+  return {
+    id,
+    name,
+    confidence,
+    totalCalories,
+    nutrition: {
+      protein: totalProtein,
+      carbs: totalCarbs,
+      fat: totalFat,
+      fiber: totalFiber,
+      sugar: totalSugar
+    },
+    items
+  };
+};
+
 // Simulated meal analysis results for Indian food
 export const mealAnalysisResults = {
-  chicken_biryani: {
-    id: "meal_001",
-    name: "Chicken Biryani",
-    confidence: 0.94,
-    totalCalories: 490,
-    nutrition: {
-      protein: 28,
-      carbs: 52,
-      fat: 18,
-      fiber: 3,
-      sugar: 4
+  chicken_biryani: buildAnalysis("meal_001", "Chicken Biryani", 0.94, [
+    {
+      name: "Basmati Rice",
+      grams: 150,
+      calories: 195,
+      nutrition: { protein: 4, carbs: 43, fat: 0.5, fiber: 0.6, sugar: 0.1 }
     },
-    items: [
-      { name: "Basmati Rice", calories: 210, portion: "150g" },
-      { name: "Chicken (with bone)", calories: 180, portion: "120g" },
-      { name: "Ghee", calories: 45, portion: "1 tbsp" },
-      { name: "Onions & Spices", calories: 35, portion: "50g" },
-      { name: "Raita", calories: 20, portion: "30ml" }
-    ]
-  },
-  masala_dosa: {
-    id: "meal_002",
-    name: "Masala Dosa with Sambar",
-    confidence: 0.92,
-    totalCalories: 380,
-    nutrition: {
-      protein: 12,
-      carbs: 58,
-      fat: 14,
-      fiber: 6,
-      sugar: 5
+    {
+      name: "Chicken",
+      grams: 120,
+      calories: 240,
+      nutrition: { protein: 31, carbs: 0, fat: 13, fiber: 0, sugar: 0 }
     },
-    items: [
-      { name: "Dosa (Rice & Urad Dal)", calories: 165, portion: "1 large" },
-      { name: "Potato Masala", calories: 120, portion: "100g" },
-      { name: "Sambar", calories: 65, portion: "100ml" },
-      { name: "Coconut Chutney", calories: 30, portion: "30g" }
-    ]
-  },
-  dal_chawal: {
-    id: "meal_003",
-    name: "Dal Chawal with Sabzi",
-    confidence: 0.96,
-    totalCalories: 420,
-    nutrition: {
-      protein: 18,
-      carbs: 62,
-      fat: 12,
-      fiber: 8,
-      sugar: 6
+    {
+      name: "Biryani Masala + Onion",
+      grams: 50,
+      calories: 55,
+      nutrition: { protein: 1.4, carbs: 9, fat: 1.6, fiber: 1.4, sugar: 2 }
     },
-    items: [
-      { name: "Steamed Rice", calories: 180, portion: "150g" },
-      { name: "Dal Tadka", calories: 140, portion: "150ml" },
-      { name: "Mixed Vegetable Sabzi", calories: 70, portion: "100g" },
-      { name: "Ghee", calories: 30, portion: "1 tsp" }
-    ]
-  },
-  paneer_butter_masala: {
-    id: "meal_004",
-    name: "Paneer Butter Masala with Naan",
-    confidence: 0.91,
-    totalCalories: 650,
-    nutrition: {
-      protein: 24,
-      carbs: 55,
-      fat: 38,
-      fiber: 4,
-      sugar: 8
+    {
+      name: "Raita",
+      grams: 40,
+      calories: 32,
+      nutrition: { protein: 1.6, carbs: 2.8, fat: 1.4, fiber: 0, sugar: 2 }
+    }
+  ]),
+  masala_dosa: buildAnalysis("meal_002", "Masala Dosa with Sambar", 0.92, [
+    {
+      name: "Dosa",
+      grams: 120,
+      calories: 220,
+      nutrition: { protein: 5.5, carbs: 33, fat: 7.5, fiber: 1.5, sugar: 1 }
     },
-    items: [
-      { name: "Paneer", calories: 260, portion: "150g" },
-      { name: "Butter Gravy", calories: 140, portion: "100ml" },
-      { name: "Butter Naan", calories: 250, portion: "2 pieces" }
-    ]
-  },
-  poha: {
-    id: "meal_005",
-    name: "Poha with Chai",
-    confidence: 0.95,
-    totalCalories: 320,
-    nutrition: {
-      protein: 8,
-      carbs: 48,
-      fat: 10,
-      fiber: 4,
-      sugar: 12
+    {
+      name: "Potato Masala",
+      grams: 100,
+      calories: 130,
+      nutrition: { protein: 2.5, carbs: 20, fat: 4.5, fiber: 2.4, sugar: 2.1 }
     },
-    items: [
-      { name: "Poha (Flattened Rice)", calories: 180, portion: "150g" },
-      { name: "Peanuts", calories: 60, portion: "20g" },
-      { name: "Chai with Milk & Sugar", calories: 80, portion: "150ml" }
-    ]
-  },
-  idli_sambar: {
-    id: "meal_006",
-    name: "Idli Sambar",
-    confidence: 0.97,
-    totalCalories: 280,
-    nutrition: {
-      protein: 10,
-      carbs: 48,
-      fat: 6,
-      fiber: 5,
-      sugar: 4
+    {
+      name: "Sambar",
+      grams: 120,
+      calories: 72,
+      nutrition: { protein: 3, carbs: 10, fat: 1.8, fiber: 2.2, sugar: 2 }
     },
-    items: [
-      { name: "Idli", calories: 120, portion: "3 pieces" },
-      { name: "Sambar", calories: 80, portion: "120ml" },
-      { name: "Coconut Chutney", calories: 50, portion: "40g" },
-      { name: "Gunpowder (Podi)", calories: 30, portion: "1 tbsp" }
-    ]
-  }
+    {
+      name: "Coconut Chutney",
+      grams: 35,
+      calories: 90,
+      nutrition: { protein: 1.5, carbs: 4, fat: 8, fiber: 2, sugar: 1.1 }
+    }
+  ]),
+  dal_chawal: buildAnalysis("meal_003", "Dal Chawal with Sabzi", 0.96, [
+    {
+      name: "Steamed Rice",
+      grams: 160,
+      calories: 208,
+      nutrition: { protein: 4.2, carbs: 46, fat: 0.5, fiber: 0.6, sugar: 0.1 }
+    },
+    {
+      name: "Dal Tadka",
+      grams: 160,
+      calories: 190,
+      nutrition: { protein: 9.5, carbs: 22, fat: 7.2, fiber: 6.2, sugar: 2.2 }
+    },
+    {
+      name: "Mixed Vegetable Sabzi",
+      grams: 100,
+      calories: 92,
+      nutrition: { protein: 2.5, carbs: 10.5, fat: 4.8, fiber: 3.5, sugar: 3.2 }
+    }
+  ]),
+  paneer_butter_masala: buildAnalysis("meal_004", "Paneer Butter Masala with Naan", 0.91, [
+    {
+      name: "Paneer Cubes",
+      grams: 140,
+      calories: 370,
+      nutrition: { protein: 24, carbs: 6, fat: 28, fiber: 0, sugar: 2 }
+    },
+    {
+      name: "Butter Masala Gravy",
+      grams: 130,
+      calories: 200,
+      nutrition: { protein: 4, carbs: 11, fat: 16, fiber: 1.3, sugar: 4.5 }
+    },
+    {
+      name: "Butter Naan",
+      grams: 110,
+      calories: 310,
+      nutrition: { protein: 8.5, carbs: 49, fat: 9.5, fiber: 2.2, sugar: 1.4 }
+    }
+  ]),
+  poha: buildAnalysis("meal_005", "Poha with Chai", 0.95, [
+    {
+      name: "Poha",
+      grams: 170,
+      calories: 230,
+      nutrition: { protein: 5.5, carbs: 35, fat: 7.5, fiber: 2.6, sugar: 2.4 }
+    },
+    {
+      name: "Peanuts",
+      grams: 20,
+      calories: 114,
+      nutrition: { protein: 5.1, carbs: 3.6, fat: 9.8, fiber: 1.7, sugar: 0.9 }
+    },
+    {
+      name: "Chai",
+      grams: 150,
+      calories: 92,
+      nutrition: { protein: 2.4, carbs: 12, fat: 3.5, fiber: 0, sugar: 10 }
+    }
+  ]),
+  idli_sambar: buildAnalysis("meal_006", "Idli Sambar", 0.97, [
+    {
+      name: "Idli",
+      grams: 150,
+      calories: 210,
+      nutrition: { protein: 6, carbs: 42, fat: 1.2, fiber: 2.3, sugar: 0.5 }
+    },
+    {
+      name: "Sambar",
+      grams: 130,
+      calories: 82,
+      nutrition: { protein: 3.4, carbs: 11, fat: 2.1, fiber: 2.3, sugar: 2.1 }
+    },
+    {
+      name: "Coconut Chutney",
+      grams: 40,
+      calories: 105,
+      nutrition: { protein: 1.8, carbs: 4.6, fat: 9.4, fiber: 2.2, sugar: 1.1 }
+    }
+  ])
 };
 
 // Daily nutrition goals
