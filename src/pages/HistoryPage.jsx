@@ -1,8 +1,13 @@
+import { AlertTriangle, UtensilsCrossed } from 'lucide-react';
 import { useMeals } from '../context/MealContext';
-import { UtensilsCrossed } from 'lucide-react';
+import { useUser } from '../context/UserContext';
+import { checkMealAllergens } from '../utils/allergenChecker';
 
 const HistoryPage = () => {
   const { meals } = useMeals();
+  const { user } = useUser();
+
+  const userAllergens = user?.preferences?.allergies || [];
 
   const groupedMeals = meals.reduce((acc, meal) => {
     const type = meal.mealType;
@@ -26,44 +31,59 @@ const HistoryPage = () => {
       ) : (
         mealOrder.map((type) => {
           const typeMeals = groupedMeals[type];
-          if (!typeMeals || typeMeals.length === 0) return null;
-          
+          if (!typeMeals?.length) return null;
+
           return (
             <div key={type} className="card">
               <h3 className="card-title">{type}</h3>
-              {typeMeals.map((meal) => (
-                <div key={meal.id} className="meal-item">
-                  {meal.image ? (
-                    <img src={meal.image} alt={meal.name} className="meal-image" />
-                  ) : (
-                    <div 
-                      className="meal-image" 
-                      style={{ 
-                        background: '#e2e8f0', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center' 
-                      }}
-                    >
-                      <UtensilsCrossed size={24} color="#94a3b8" />
+              {typeMeals.map((meal) => {
+                const matches = userAllergens.length
+                  ? checkMealAllergens(meal, userAllergens)
+                  : [];
+                const flagged = matches.length > 0;
+
+                return (
+                  <div key={meal.id} className={`meal-item${flagged ? ' meal-item-flagged' : ''}`}>
+                    {meal.image ? (
+                      <img src={meal.image} alt={meal.name} className="meal-image" />
+                    ) : (
+                      <div className="meal-image" style={{
+                        background: '#e2e8f0', display: 'flex',
+                        alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <UtensilsCrossed size={24} color="#94a3b8" />
+                      </div>
+                    )}
+
+                    <div className="meal-info">
+                      <div className="meal-name">{meal.name}</div>
+                      <div className="meal-meta">
+                        {meal.time} · P: {meal.nutrition?.protein || 0}g ·
+                        C: {meal.nutrition?.carbs || 0}g · F: {meal.nutrition?.fat || 0}g
+                      </div>
+
+                      {/* Allergen badges */}
+                      {flagged && (
+                        <div className="history-allergen-badges">
+                          {matches.map(({ allergen }) => (
+                            <span key={allergen} className="history-allergen-badge">
+                              <AlertTriangle size={11} />
+                              {allergen}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
-                  <div className="meal-info">
-                    <div className="meal-name">{meal.name}</div>
-                    <div className="meal-meta">
-                      {meal.time} • P: {meal.nutrition?.protein || 0}g • 
-                      C: {meal.nutrition?.carbs || 0}g • F: {meal.nutrition?.fat || 0}g
-                    </div>
+
+                    <div className="meal-calories">{meal.calories} kcal</div>
                   </div>
-                  <div className="meal-calories">{meal.calories} kcal</div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           );
         })
       )}
 
-      {/* Total for today */}
       {meals.length > 0 && (
         <div className="card" style={{ background: '#f8fafc' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

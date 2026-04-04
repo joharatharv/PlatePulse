@@ -95,6 +95,113 @@ def get_valid_user_object_id(user_id):
 
 # ============== User Routes ==============
 
+def calculate_weight_loss_calories(age, gender, height, weight, activity_level):
+    """Harris-Benedict BMR with 500 kcal/day weight-loss deficit"""
+    try:
+        age, height, weight = float(age), float(height), float(weight)
+        if gender == 'male':
+            bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
+        else:
+            bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age)
+        multipliers = {
+            'sedentary': 1.2, 'light': 1.375, 'moderate': 1.55,
+            'active': 1.725, 'very_active': 1.9
+        }
+        tdee = bmr * multipliers.get(activity_level, 1.55)
+        return max(1200, round(tdee - 500))
+    except (TypeError, ValueError):
+        return 1800
+
+
+@app.route("/api/users", methods=["POST"])
+def register_user():
+    """Register a new user from onboarding"""
+    try:
+        data = request.json
+        doctor = data.get("doctorGoals", {})
+
+        # Derive calorie goal: doctor override → BMR calculation → fallback
+        calorie_goal = (
+            int(doctor.get("caloricLimit")) if doctor.get("caloricLimit")
+            else calculate_weight_loss_calories(
+                data.get("age"), data.get("gender"),
+                data.get("height"), data.get("currentWeight"),
+                data.get("activityLevel")
+            )
+        )
+
+        now = datetime.utcnow()
+        user = {
+            "name": data.get("name", ""),
+            "email": data.get("email", ""),
+            "profile": {
+                "age": data.get("age"),
+                "gender": data.get("gender"),
+                "height": data.get("height"),
+                "weight": data.get("currentWeight"),
+                "startWeight": data.get("currentWeight"),  # baseline — never overwritten
+                "activityLevel": data.get("activityLevel", "moderate"),
+            },
+            "targetWeight": data.get("targetWeight"),
+            "chronicConditions": data.get("chronicConditions", []),
+            "doctorGoals": {
+                "caloricLimit": doctor.get("caloricLimit") or None,
+                "sodiumLimit": doctor.get("sodiumLimit") or None,
+                "sugarLimit": doctor.get("sugarLimit") or None,
+                "carbLimit": doctor.get("carbLimit") or None,
+                "proteinTarget": doctor.get("proteinTarget") or None,
+                "fiberTarget": doctor.get("fiberTarget") or None,
+                "waterIntake": doctor.get("waterIntake") or None,
+                "foodsToAvoid": doctor.get("foodsToAvoid", ""),
+                "specialWarnings": doctor.get("specialWarnings", ""),
+            },
+            "goals": {
+                "calories": calorie_goal,
+                "protein": int(doctor.get("proteinTarget") or 60),
+                "carbs": int(doctor.get("carbLimit") or 250),
+                "fat": 65,
+                "fiber": 30,
+                "sugar": int(doctor.get("sugarLimit") or 50),
+            },
+            "preferences": {
+                "dietType": data.get("dietType", "non-vegetarian"),
+                "allergies": data.get("allergies", []),
+                "cuisinePreference": ["North Indian", "South Indian"],
+            },
+            "created_at": now,
+            "updated_at": now,
+        }
+
+        result = users_collection.insert_one(user)
+        user["_id"] = result.inserted_id
+        return jsonify(serialize_doc(user)), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/users/<user_id>", methods=["PUT"])
+def update_user(user_id):
+    """Update user profile (for Settings screen)"""
+    try:
+        data = request.json
+        obj_id, error = get_valid_user_object_id(user_id)
+        if error:
+            return jsonify({"error": error}), 404
+
+        allowed = ["name", "email", "profile", "goals", "targetWeight",
+                   "chronicConditions", "doctorGoals", "preferences"]
+        update_fields = {"updated_at": datetime.utcnow()}
+        for field in allowed:
+            if field in data:
+                update_fields[field] = data[field]
+
+        users_collection.update_one({"_id": obj_id}, {"$set": update_fields})
+        updated = users_collection.find_one({"_id": obj_id})
+        return jsonify(serialize_doc(updated))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/api/users/<user_id>", methods=["GET"])
 def get_user(user_id):
     """Get user by ID"""
@@ -414,13 +521,15 @@ def calculate_daily_summary(user_obj_id, date):
                 "totalProtein": {"$sum": "$nutrition.protein"},
                 "totalCarbs": {"$sum": "$nutrition.carbs"},
                 "totalFat": {"$sum": "$nutrition.fat"},
+                "totalSugar": {"$sum": "$nutrition.sugar"},
+                "totalFiber": {"$sum": "$nutrition.fiber"},
                 "mealsCount": {"$sum": 1}
             }
         }
     ]
-    
+
     result = list(meals_collection.aggregate(pipeline))
-    
+
     if result:
         consumed = result[0]
         return {
@@ -429,9 +538,11 @@ def calculate_daily_summary(user_obj_id, date):
             "date": date,
             "consumed": {
                 "calories": consumed["totalCalories"],
-                "protein": consumed["totalProtein"],
-                "carbs": consumed["totalCarbs"],
-                "fat": consumed["totalFat"]
+                "protein": round(consumed["totalProtein"], 1),
+                "carbs": round(consumed["totalCarbs"], 1),
+                "fat": round(consumed["totalFat"], 1),
+                "sugar": round(consumed.get("totalSugar", 0), 1),
+                "fiber": round(consumed.get("totalFiber", 0), 1),
             },
             "remaining": {
                 "calories": max(0, goals["calories"] - consumed["totalCalories"]),
