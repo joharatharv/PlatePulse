@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Camera, Upload, Check, X, AlertTriangle } from 'lucide-react';
 import { useMeals } from '../context/MealContext';
 import { useUser } from '../context/UserContext';
-import { getRandomMealAnalysis, simulateApiCall } from '../api/dummyData';
+import { getDemoMealAnalysis, simulateApiCall } from '../api/dummyData';
 import { checkAllergens } from '../utils/allergenChecker';
 
 const SnapMealPage = () => {
@@ -112,7 +112,7 @@ const SnapMealPage = () => {
   const handleAnalyze = async () => {
     if (!imagePreview) return;
     setIsAnalyzing(true);
-    const result = await simulateApiCall(getRandomMealAnalysis(), 2000);
+    const result = await simulateApiCall(getDemoMealAnalysis(), 2000);
     setAnalysisResult(result);
     setAllergenMatches(checkAllergens(result.items, userAllergens));
     setIsAnalyzing(false);

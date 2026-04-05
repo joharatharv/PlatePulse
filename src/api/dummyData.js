@@ -250,6 +250,22 @@ export const getRandomMealAnalysis = () => {
   return meals[Math.floor(Math.random() * meals.length)];
 };
 
+// Hardcoded demo result for Idli + Sambar photo — replace with real model output once fine-tuned
+export const getDemoMealAnalysis = () => buildAnalysis("meal_demo", "Idli with Sambar", 0.97, [
+  {
+    name: "Idli",
+    grams: 150,
+    calories: 210,
+    nutrition: { protein: 6, carbs: 42, fat: 1.2, fiber: 2.3, sugar: 0.5 }
+  },
+  {
+    name: "Sambar",
+    grams: 130,
+    calories: 82,
+    nutrition: { protein: 3.4, carbs: 11, fat: 2.1, fiber: 2.3, sugar: 2.1 }
+  }
+]);
+
 // API Helper Functions (will connect to MongoDB backend)
 export const api = {
   // Fetch all meals for a user on a specific date
