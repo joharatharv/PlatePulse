@@ -53,6 +53,7 @@ users_collection = db["users"] if db is not None else None
 meals_collection = db["meals"] if db is not None else None
 summaries_collection = db["daily_summaries"] if db is not None else None
 food_db_collection = db["food_database"] if db is not None else None
+posts_collection = db["posts"] if db is not None else None
 
 
 def serialize_doc(doc):
@@ -607,3 +608,75 @@ if __name__ == "__main__":
     print("=" * 40 + "\n")
     
     app.run(host="0.0.0.0", port=5001, debug=True)
+
+
+# ============== Posts/Social Feed Routes ==============
+
+@app.route("/api/posts", methods=["GET"])
+def get_posts():
+    """Get all posts for the explore/social feed"""
+    try:
+        posts = list(posts_collection.find().sort("created_at", -1).limit(50))
+        return jsonify({"posts": [serialize_post(post) for post in posts]})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/posts", methods=["POST"])
+def create_post():
+    """Create a new post"""
+    try:
+        data = request.json
+        now = datetime.utcnow()
+        post = {
+            "userId": data.get("userId"),
+            "userName": data.get("userName", "Anonymous"),
+            "mealName": data.get("mealName", ""),
+            "caption": data.get("caption", ""),
+            "calories": data.get("calories"),
+            "imageData": data.get("imageData", ""),
+            "likes": 0,
+            "likedBy": [],
+            "createdAt": now
+        }
+        result = posts_collection.insert_one(post)
+        post["_id"] = result.inserted_id
+        return jsonify({"success": True, "post": serialize_post(post)}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/posts/<post_id>/like", methods=["POST"])
+def like_post(post_id):
+    """Like or unlike a post"""
+    try:
+        data = request.json
+        user_id = data.get("userId", "anonymous")
+        post = posts_collection.find_one({"_id": ObjectId(post_id)})
+        if not post:
+            return jsonify({"error": "Post not found"}), 404
+        liked_by = post.get("likedBy", [])
+        if user_id in liked_by:
+            liked_by.remove(user_id)
+            is_liked = False
+        else:
+            liked_by.append(user_id)
+            is_liked = True
+        new_likes = len(liked_by)
+        posts_collection.update_one(
+            {"_id": ObjectId(post_id)},
+            {"$set": {"likes": new_likes, "likedBy": liked_by}}
+        )
+        return jsonify({"success": True, "likes": new_likes, "isLiked": is_liked})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+def serialize_post(post):
+    """Convert post document to JSON-serializable format"""
+    if post is None:
+        return None
+    post["id"] = str(post.pop("_id"))
+    if "createdAt" in post and isinstance(post["createdAt"], datetime):
+        post["createdAt"] = post["createdAt"].isoformat()
+    return post

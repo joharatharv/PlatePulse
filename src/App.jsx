@@ -9,6 +9,7 @@ import SnapMealPage from './pages/SnapMealPage';
 import SummaryPage from './pages/SummaryPage';
 import HistoryPage from './pages/HistoryPage';
 import AboutPage from './pages/AboutPage';
+import ExplorePage from './pages/ExplorePage';
 import OnboardingPage from './pages/OnboardingPage';
 
 function AppContent() {
@@ -38,6 +39,7 @@ function AppContent() {
           <Route path="/snap" element={<SnapMealPage />} />
           <Route path="/summary" element={<SummaryPage />} />
           <Route path="/history" element={<HistoryPage />} />
+          <Route path="/explore" element={<ExplorePage />} />
           <Route path="/about" element={<AboutPage />} />
         </Routes>
         <Navigation />

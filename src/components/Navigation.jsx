@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Camera, BarChart3, History, Info } from 'lucide-react';
+import { Home, Camera, Compass, History, Info } from 'lucide-react';
 
 const Navigation = () => {
   return (
@@ -12,9 +12,9 @@ const Navigation = () => {
         <Camera size={22} />
         <span>Snap</span>
       </NavLink>
-      <NavLink to="/summary" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-        <BarChart3 size={22} />
-        <span>Summary</span>
+      <NavLink to="/explore" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+        <Compass size={22} />
+        <span>Explore</span>
       </NavLink>
       <NavLink to="/history" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
         <History size={22} />
