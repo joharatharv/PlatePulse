@@ -16,6 +16,7 @@ const Header = () => {
       case '/snap':    return 'Snap & Analyze';
       case '/summary': return 'Daily Summary';
       case '/history': return 'Meal History';
+      case '/about':   return 'About PlatePulse';
       default:         return 'My Weight Loss Journey';
     }
   };
@@ -25,6 +26,7 @@ const Header = () => {
       case '/snap':    return 'Take a photo of your meal';
       case '/summary': return 'Track your nutrition progress';
       case '/history': return 'Your logged meals';
+      case '/about':   return 'Our story, features & mission';
       default:         return firstName ? `${greeting}, ${firstName}!` : `${greeting}!`;
     }
   };

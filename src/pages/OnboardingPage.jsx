@@ -2,6 +2,77 @@ import { useState } from 'react';
 import { ChevronRight, ChevronLeft, Check, Target, Shield, Heart } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 
+/* ─── Sample / Demo Users ────────────────────────────────────────────
+   These require NO backend — loaded entirely from JS into localStorage.
+   Designed to showcase the app's key features to testers.
+──────────────────────────────────────────────────────────────────── */
+const SAMPLE_USERS = [
+  {
+    id: 'sample_1',
+    name: 'Priya Sharma',
+    email: '',
+    profile: {
+      age: 32,
+      gender: 'female',
+      height: 162,
+      weight: 78,
+      startWeight: 78,
+      activityLevel: 'light',
+    },
+    targetWeight: 65,
+    chronicConditions: ['Diabetes Type 2', 'Hypertension'],
+    doctorGoals: {
+      caloricLimit: '1600',
+      sodiumLimit: '1500',
+      sugarLimit: '25',
+      carbLimit: '180',
+      proteinTarget: '55',
+      fiberTarget: '28',
+      waterIntake: '10',
+      foodsToAvoid: 'Fried foods, white rice, sweets, pickles, papads',
+      specialWarnings: 'Eat every 3 hours. No skipping breakfast. Monitor BP after salty meals.',
+    },
+    goals: { calories: 1600, protein: 55, carbs: 180, fat: 50, fiber: 28, sugar: 25 },
+    preferences: {
+      dietType: 'Vegetarian',
+      allergies: ['Dairy', 'Eggs'],
+      cuisinePreference: ['South Indian', 'North Indian'],
+    },
+  },
+  {
+    id: 'sample_2',
+    name: 'Rahul Verma',
+    email: '',
+    profile: {
+      age: 28,
+      gender: 'male',
+      height: 178,
+      weight: 92,
+      startWeight: 92,
+      activityLevel: 'active',
+    },
+    targetWeight: 75,
+    chronicConditions: ['None of these'],
+    doctorGoals: {
+      caloricLimit: '',
+      sodiumLimit: '',
+      sugarLimit: '',
+      carbLimit: '',
+      proteinTarget: '',
+      fiberTarget: '',
+      waterIntake: '12',
+      foodsToAvoid: '',
+      specialWarnings: '',
+    },
+    goals: { calories: 2050, protein: 120, carbs: 240, fat: 65, fiber: 30, sugar: 50 },
+    preferences: {
+      dietType: 'Non-Vegetarian',
+      allergies: ['Peanuts', 'Wheat / Gluten'],
+      cuisinePreference: ['North Indian', 'South Indian'],
+    },
+  },
+];
+
 const CHRONIC_CONDITIONS = [
   'Diabetes Type 2',
   'Hypertension',
@@ -50,7 +121,7 @@ const emptyDoctorGoals = {
 };
 
 export default function OnboardingPage() {
-  const { completeOnboarding } = useUser();
+  const { completeOnboarding, loadSampleUser } = useUser();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -140,7 +211,7 @@ export default function OnboardingPage() {
     // On success, UserContext sets isOnboardingComplete → App re-renders automatically
   };
 
-  if (step === 0) return <WelcomeScreen onBegin={() => setStep(1)} />;
+  if (step === 0) return <WelcomeScreen onBegin={() => setStep(1)} onSample={loadSampleUser} />;
 
   return (
     <div className="onboarding">
@@ -203,7 +274,7 @@ export default function OnboardingPage() {
 }
 
 /* ─── Welcome Screen ─────────────────────────────────────────────── */
-function WelcomeScreen({ onBegin }) {
+function WelcomeScreen({ onBegin, onSample }) {
   return (
     <div className="onb-welcome">
       <div className="onb-welcome-top">
@@ -248,6 +319,46 @@ function WelcomeScreen({ onBegin }) {
       <button className="btn btn-primary onb-begin-btn" onClick={onBegin}>
         Let's Begin <ChevronRight size={18} />
       </button>
+
+      {/* ── Demo / Sample users ───────────────────────────────────── */}
+      <div className="sample-divider">
+        <span>or explore with a sample profile</span>
+      </div>
+
+      <div className="sample-cards">
+        {SAMPLE_USERS.map(u => {
+          const conditions = u.chronicConditions.filter(c => c !== 'None of these');
+          const toGo = u.profile.weight - u.targetWeight;
+          return (
+            <button key={u.id} className="sample-card" onClick={() => onSample(u)}>
+              <div className="sample-card-avatar">
+                {u.profile.gender === 'female' ? '👩' : '👨'}
+              </div>
+              <div className="sample-card-body">
+                <div className="sample-card-name">{u.name}</div>
+                <div className="sample-card-meta">
+                  {u.profile.weight} kg → {u.targetWeight} kg &nbsp;·&nbsp; -{toGo} kg goal
+                </div>
+                {conditions.length > 0 && (
+                  <div className="sample-card-tags">
+                    {conditions.map(c => (
+                      <span key={c} className="sample-card-tag condition">{c}</span>
+                    ))}
+                  </div>
+                )}
+                {u.preferences.allergies.length > 0 && (
+                  <div className="sample-card-tags">
+                    {u.preferences.allergies.map(a => (
+                      <span key={a} className="sample-card-tag allergen">⚠ {a}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <ChevronRight size={18} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -24,6 +24,23 @@ export const UserProvider = ({ children }) => {
   }, []);
 
   const fetchUser = async (uid) => {
+    // Sample users are stored entirely in localStorage — no API call needed
+    if (uid.startsWith('sample_')) {
+      try {
+        const stored = localStorage.getItem('platepulse_user_data');
+        if (stored) {
+          setUser(JSON.parse(stored));
+          setUserId(uid);
+          setIsOnboardingComplete(true);
+          setIsLoading(false);
+          return;
+        }
+      } catch { /* fall through */ }
+      localStorage.removeItem('platepulse_user_id');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch(`http://localhost:5001/api/users/${uid}`);
       if (response.ok) {
@@ -35,7 +52,7 @@ export const UserProvider = ({ children }) => {
         localStorage.removeItem('platepulse_user_id');
       }
     } catch {
-      // Backend unreachable — keep stored id, treat as complete so app still loads
+      // Backend unreachable — keep stored id so app still loads
       const storedId = localStorage.getItem('platepulse_user_id');
       if (storedId) {
         setUserId(storedId);
@@ -67,10 +84,23 @@ export const UserProvider = ({ children }) => {
     }
   };
 
+  // Load a sample/demo user entirely from JS — no backend required
+  const loadSampleUser = (sampleUser) => {
+    const id = sampleUser.id;
+    localStorage.setItem('platepulse_user_id', id);
+    localStorage.setItem('platepulse_user_data', JSON.stringify(sampleUser));
+    setUser(sampleUser);
+    setUserId(id);
+    setIsOnboardingComplete(true);
+  };
+
   const updateUser = (updated) => setUser(updated);
 
   return (
-    <UserContext.Provider value={{ user, userId, isOnboardingComplete, isLoading, completeOnboarding, updateUser }}>
+    <UserContext.Provider value={{
+      user, userId, isOnboardingComplete, isLoading,
+      completeOnboarding, loadSampleUser, updateUser,
+    }}>
       {children}
     </UserContext.Provider>
   );
