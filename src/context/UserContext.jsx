@@ -13,6 +13,18 @@ export const UserProvider = ({ children }) => {
   const [userId, setUserId] = useState(null);
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [registeredUsers, setRegisteredUsers] = useState(
+    () => JSON.parse(localStorage.getItem('platepulse_users') || '[]')
+  );
+
+  const saveToRegistry = (userData) => {
+    setRegisteredUsers(prev => {
+      const without = prev.filter(u => u.id !== userData.id);
+      const updated = [...without, userData];
+      localStorage.setItem('platepulse_users', JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   useEffect(() => {
     const storedId = localStorage.getItem('platepulse_user_id');
@@ -76,6 +88,7 @@ export const UserProvider = ({ children }) => {
         setUser(newUser);
         setUserId(newUser.id);
         setIsOnboardingComplete(true);
+        saveToRegistry(newUser);
         return { success: true };
       }
       return { success: false, error: 'Server error. Please try again.' };
@@ -92,6 +105,24 @@ export const UserProvider = ({ children }) => {
     setUser(sampleUser);
     setUserId(id);
     setIsOnboardingComplete(true);
+    saveToRegistry(sampleUser);
+  };
+
+  const loginAsUser = (userData) => {
+    localStorage.setItem('platepulse_user_id', userData.id);
+    if (userData.id.startsWith('sample_')) {
+      localStorage.setItem('platepulse_user_data', JSON.stringify(userData));
+    }
+    setUser(userData);
+    setUserId(userData.id);
+    setIsOnboardingComplete(true);
+  };
+
+  const logout = () => {
+    localStorage.removeItem('platepulse_user_id');
+    setUser(null);
+    setUserId(null);
+    setIsOnboardingComplete(false);
   };
 
   const updateUser = (updated) => setUser(updated);
@@ -99,7 +130,8 @@ export const UserProvider = ({ children }) => {
   return (
     <UserContext.Provider value={{
       user, userId, isOnboardingComplete, isLoading,
-      completeOnboarding, loadSampleUser, updateUser,
+      registeredUsers, completeOnboarding, loadSampleUser,
+      loginAsUser, logout, updateUser,
     }}>
       {children}
     </UserContext.Provider>

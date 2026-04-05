@@ -1,9 +1,10 @@
 import { useLocation } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 
 const Header = () => {
   const location = useLocation();
-  const { user } = useUser();
+  const { user, logout } = useUser();
 
   const firstName = user?.name?.split(' ')[0] || '';
 
@@ -33,8 +34,15 @@ const Header = () => {
 
   return (
     <header className="header">
-      <h1>{getTitle()}</h1>
-      <p>{getSubtitle()}</p>
+      <div className="header-content">
+        <div>
+          <h1>{getTitle()}</h1>
+          <p>{getSubtitle()}</p>
+        </div>
+        <button className="header-logout" onClick={logout} title="Log out">
+          <LogOut size={18} />
+        </button>
+      </div>
     </header>
   );
 };

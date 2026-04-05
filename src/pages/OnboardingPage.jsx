@@ -121,8 +121,9 @@ const emptyDoctorGoals = {
 };
 
 export default function OnboardingPage() {
-  const { completeOnboarding, loadSampleUser } = useUser();
+  const { completeOnboarding, loadSampleUser, loginAsUser, registeredUsers } = useUser();
   const [step, setStep] = useState(0);
+  const [showLogin, setShowLogin] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [customAllergen, setCustomAllergen] = useState('');
@@ -211,7 +212,26 @@ export default function OnboardingPage() {
     // On success, UserContext sets isOnboardingComplete → App re-renders automatically
   };
 
-  if (step === 0) return <WelcomeScreen onBegin={() => setStep(1)} onSample={loadSampleUser} />;
+  if (step === 0 && showLogin) {
+    return (
+      <LoginScreen
+        users={registeredUsers}
+        onLogin={loginAsUser}
+        onBack={() => setShowLogin(false)}
+      />
+    );
+  }
+
+  if (step === 0) {
+    return (
+      <WelcomeScreen
+        onBegin={() => setStep(1)}
+        onSample={loadSampleUser}
+        onLogin={() => setShowLogin(true)}
+        hasUsers={registeredUsers.length > 0}
+      />
+    );
+  }
 
   return (
     <div className="onboarding">
@@ -273,8 +293,62 @@ export default function OnboardingPage() {
   );
 }
 
+/* ─── Login Screen ───────────────────────────────────────────────── */
+function LoginScreen({ users, onLogin, onBack }) {
+  return (
+    <div className="onb-welcome">
+      <div className="onb-welcome-top">
+        <div className="onb-logo">🍽️</div>
+        <h1 className="onb-welcome-title">Welcome back</h1>
+        <p className="onb-welcome-sub">Select your profile to continue</p>
+      </div>
+
+      <div className="sample-cards">
+        {users.map(u => {
+          const conditions = (u.chronicConditions || []).filter(c => c !== 'None of these');
+          const allergies = u.preferences?.allergies || [];
+          return (
+            <button key={u.id} className="sample-card" onClick={() => onLogin(u)}>
+              <div className="sample-card-avatar">
+                {u.profile?.gender === 'female' ? '👩' : '👨'}
+              </div>
+              <div className="sample-card-body">
+                <div className="sample-card-name">{u.name}</div>
+                {u.profile?.weight && u.targetWeight && (
+                  <div className="sample-card-meta">
+                    {u.profile.weight} kg → {u.targetWeight} kg
+                  </div>
+                )}
+                {conditions.length > 0 && (
+                  <div className="sample-card-tags">
+                    {conditions.map(c => (
+                      <span key={c} className="sample-card-tag condition">{c}</span>
+                    ))}
+                  </div>
+                )}
+                {allergies.length > 0 && (
+                  <div className="sample-card-tags">
+                    {allergies.map(a => (
+                      <span key={a} className="sample-card-tag allergen">⚠ {a}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <ChevronRight size={18} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
+            </button>
+          );
+        })}
+      </div>
+
+      <button className="btn btn-secondary onb-back-btn" onClick={onBack}>
+        <ChevronLeft size={18} /> Back
+      </button>
+    </div>
+  );
+}
+
 /* ─── Welcome Screen ─────────────────────────────────────────────── */
-function WelcomeScreen({ onBegin, onSample }) {
+function WelcomeScreen({ onBegin, onSample, onLogin, hasUsers }) {
   return (
     <div className="onb-welcome">
       <div className="onb-welcome-top">
@@ -319,6 +393,12 @@ function WelcomeScreen({ onBegin, onSample }) {
       <button className="btn btn-primary onb-begin-btn" onClick={onBegin}>
         Let's Begin <ChevronRight size={18} />
       </button>
+
+      {hasUsers && (
+        <button className="btn btn-secondary onb-login-btn" onClick={onLogin}>
+          Log In to Existing Profile
+        </button>
+      )}
 
       {/* ── Demo / Sample users ───────────────────────────────────── */}
       <div className="sample-divider">
