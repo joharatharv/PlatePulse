@@ -591,24 +591,6 @@ def health_check():
         }), 500
 
 
-if __name__ == "__main__":
-    print("\n🍽️  PlatePulse Backend Server")
-    print("=" * 40)
-    print(f"MongoDB URI: {MONGO_URI}")
-    print(f"Database: {DATABASE_NAME}")
-    print("\nStarting server on http://localhost:5001")
-    print("API Documentation:")
-    print("  GET  /api/health     - Health check")
-    print("  GET  /api/users/demo - Get demo user")
-    print("  GET  /api/meals      - Get meals for date")
-    print("  POST /api/meals      - Log new meal")
-    print("  GET  /api/summary    - Get daily summary")
-    print("  GET  /api/weekly     - Get weekly data")
-    print("  GET  /api/foods      - Search food database")
-    print("=" * 40 + "\n")
-    
-    app.run(host="0.0.0.0", port=5001, debug=True)
-
 
 # ============== Posts/Social Feed Routes ==============
 
@@ -680,3 +662,22 @@ def serialize_post(post):
     if "createdAt" in post and isinstance(post["createdAt"], datetime):
         post["createdAt"] = post["createdAt"].isoformat()
     return post
+
+if __name__ == "__main__":
+    print("\n🍽️  PlatePulse Backend Server")
+    print("=" * 40)
+    print(f"MongoDB URI: {MONGO_URI}")
+    print(f"Database: {DATABASE_NAME}")
+    print("\nStarting server on http://localhost:5001")
+    print("API Documentation:")
+    print("  GET  /api/health     - Health check")
+    print("  GET  /api/users/demo - Get demo user")
+    print("  GET  /api/meals      - Get meals for date")
+    print("  POST /api/meals      - Log new meal")
+    print("  GET  /api/summary    - Get daily summary")
+    print("  GET  /api/weekly     - Get weekly data")
+    print("  GET  /api/foods      - Search food database")
+    print( "  GET  /api/foods/<id> - Get food details")
+    print("=" * 40 + "\n")
+    
+    app.run(host="0.0.0.0", port=5001, debug=True)

@@ -51,32 +51,56 @@ const ExplorePage = () => {
 
   const handleCreatePost = async (e) => {
     e.preventDefault();
-    if (!newPost.imagePreview || !newPost.mealName) return;
+    if (!newPost.imagePreview || !newPost.mealName) {
+      console.warn('❌ Validation failed - Missing image or meal name');
+      alert('Please select an image and enter a meal name');
+      return;
+    }
 
     setIsPosting(true);
+    console.log('✅ Post validation passed');
+    console.log('📝 Post data:', {
+      userId,
+      userName: user?.profile?.name || 'Anonymous',
+      mealName: newPost.mealName,
+      caption: newPost.caption,
+      calories: newPost.calories,
+    });
 
     try {
+      const requestBody = {
+        userId,
+        userName: user?.profile?.name || 'Anonymous',
+        mealName: newPost.mealName,
+        caption: newPost.caption,
+        calories: newPost.calories ? parseInt(newPost.calories) : null,
+        imageData: newPost.imagePreview,
+      };
+
+      console.log('📤 Sending POST to http://localhost:5001/api/posts');
       const response = await fetch('http://localhost:5001/api/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: userId,
-          userName: user?.profile?.name || 'Anonymous',
-          mealName: newPost.mealName,
-          caption: newPost.caption,
-          calories: newPost.calories ? parseInt(newPost.calories) : null,
-          imageData: newPost.imagePreview,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
+      console.log('📥 Response received - Status:', response.status);
+      const data = await response.json();
+      console.log('Response body:', data);
+
       if (response.ok) {
-        const data = await response.json();
+        console.log('✅ Success! Post created');
         setPosts([data.post, ...posts]);
         setNewPost({ caption: '', mealName: '', calories: '', image: null, imagePreview: null });
         setShowCreatePost(false);
+        alert('Meal shared successfully!');
+      } else {
+        console.error('❌ Server error:', data);
+        alert(`Error: ${data.error || 'Failed to create post'}`);
       }
     } catch (error) {
-      console.error('Error creating post:', error);
+      console.error('❌ Fetch error:', error.message);
+      alert(`Error: ${error.message}\n\nMake sure the backend is running on http://localhost:5001`);
     } finally {
       setIsPosting(false);
     }
