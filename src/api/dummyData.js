@@ -265,7 +265,20 @@ export const getDemoMealAnalysis = () => buildAnalysis("meal_demo", "Idli with S
     nutrition: { protein: 3.4, carbs: 11, fat: 2.1, fiber: 2.3, sugar: 2.1 }
   }
 ]);
-
+export const getDemoMealAnalysis2 = () => buildAnalysis("meal_demo", "Dosa with Chutney", 0.97, [
+  {
+    name: "Dosa",
+    grams: 150,
+    calories: 210,
+    nutrition: { protein: 6, carbs: 42, fat: 1.2, fiber: 2.3, sugar: 0.5 }
+  },
+  {
+    name: "Chutney",
+    grams: 130,
+    calories: 82,
+    nutrition: { protein: 3.4, carbs: 11, fat: 2.1, fiber: 2.3, sugar: 2.1 }
+  }
+]);
 // API Helper Functions (will connect to MongoDB backend)
 export const api = {
   // Fetch all meals for a user on a specific date

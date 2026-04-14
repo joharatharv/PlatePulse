@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Camera, Upload, Check, X, AlertTriangle } from 'lucide-react';
 import { useMeals } from '../context/MealContext';
 import { useUser } from '../context/UserContext';
-import { getDemoMealAnalysis, simulateApiCall } from '../api/dummyData';
+import { getDemoMealAnalysis,getDemoMealAnalysis2, simulateApiCall } from '../api/dummyData';
 import { checkAllergens } from '../utils/allergenChecker';
 
 const SnapMealPage = () => {
@@ -19,6 +19,7 @@ const SnapMealPage = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
+  const analyzeCallCount = useRef(0);
 
   const { addMeal, summary, meals } = useMeals();
   const { user } = useUser();
@@ -107,12 +108,15 @@ const SnapMealPage = () => {
     setAnalysisResult(null);
     setAllergenMatches([]);
   };
-
   // ── Analysis ─────────────────────────────────────────────────────
   const handleAnalyze = async () => {
     if (!imagePreview) return;
     setIsAnalyzing(true);
-    const result = await simulateApiCall(getDemoMealAnalysis(), 2000);
+    analyzeCallCount.current += 1;
+    const mealData = analyzeCallCount.current % 2 !== 0
+      ? getDemoMealAnalysis()   // odd call → Idli Sambar
+      : getDemoMealAnalysis2(); // even call → Dosa Chutney
+    const result = await simulateApiCall(mealData, 2000);
     setAnalysisResult(result);
     setAllergenMatches(checkAllergens(result.items, userAllergens));
     setIsAnalyzing(false);
