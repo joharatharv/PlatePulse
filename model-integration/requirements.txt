@@ -1,0 +1,3 @@
+# Install these locally to use the Modal CLI
+# The container image is built separately inside modal_app.py
+modal>=0.73.0
