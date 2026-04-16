@@ -124,7 +124,9 @@ class NutrientScanner:
         with torch.no_grad():
             txt = self.clip_proc(text=CLIP_PROMPTS, return_tensors="pt", padding=True).to(self.device)
             tf  = self.clip_model.get_text_features(**txt)
-            self.text_feats = tf / tf.norm(dim=-1, keepdim=True)   # [41, D]
+            if not isinstance(tf, torch.Tensor):
+                tf = tf.pooler_output
+            self.text_feats = tf / tf.norm(dim=-1, keepdim=True)
 
         print("[boot] WeightNet…")
 
@@ -182,7 +184,7 @@ class NutrientScanner:
             masks  = [m for i,m in enumerate(masks)  if i != drop]
             scores = [s for i,s in enumerate(scores) if i != drop]
         return masks, scores
-
+    
     def _classify(self, img, masks):
         import torch, numpy as np
         ids, names, confs = [], [], []
@@ -195,6 +197,8 @@ class NutrientScanner:
             inp  = self.clip_proc(images=crop, return_tensors="pt").to(self.device)
             with torch.no_grad():
                 f = self.clip_model.get_image_features(**inp)
+                if not isinstance(f, torch.Tensor):
+                    f = f.pooler_output
                 f = f / f.norm(dim=-1, keepdim=True)
             sims = (f @ self.text_feats.T).squeeze(0)
             best = int(sims.argmax())
