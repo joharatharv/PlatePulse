@@ -86,7 +86,7 @@ def _nutrients(weight_g: float, cid0: int) -> Dict[str, float]:
 # ── Modal class (all models live here, GPU always available) ──────────────────
 @app.cls(
     gpu="T4",
-    scaledown_window=300,   # keep warm 5 min after last request
+    scaledown_window=60,   # keep warm 5 min after last request
     timeout=120,
 )
 class NutrientScanner:
